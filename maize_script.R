@@ -48,7 +48,7 @@ cor.test(maize$SPAD, maize$Chl_Labor, method = "spearman")
 
 ggscatter(maize, x = "SPAD", y = "Chl_Labor", 
           add = "reg.line", conf.int = TRUE, 
-          cor.coef = TRUE, cor.method = "pearson",
+          cor.coef = TRUE, cor.method = "spearman",
           xlab = "SPAD", ylab = "Chl_labor")
 
 
