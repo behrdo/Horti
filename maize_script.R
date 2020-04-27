@@ -67,7 +67,7 @@ ggscatter(maize, x = "SPAD", y = "Chl_Labor",
 
 scatter3D(maize$SPAD, maize$Chl_Labor, maize$Blattdicke_Ernteblatt,
           phi = 0, 
-          xlab = "Sepal.Length", ylab ="Petal.Length", zlab = "Sepal.Width", 
+          xlab = "SPAD", ylab ="Chl_Labor", zlab = "Blattdicke_Ernteblatt", 
           ticktype = "detailed")
 
 
