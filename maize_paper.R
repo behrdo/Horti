@@ -131,7 +131,7 @@ shapiro.test(kontr$SFR_G)
 shapiro.test(kontr$NDWI)
 shapiro.test(kontr$ChlNDI)
 
-#2. plotting the correlation
+#2. plotting the correlation (I used pearson for now, not shure about it though)
 #2.1 whole dataset
 #correlation matrix
 cor.df <- select(maize, Chl_Labor, SPAD, Chl, SFR_R, ChlNDI)
