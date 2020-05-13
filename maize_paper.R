@@ -9,7 +9,7 @@ maize <- read_excel("Maize dataset.xlsx")
 
 #1. checking for normal distribution
 #1.1 without treatment differentiation
-spad.model <- lm(FM_Rest_Ernteblatt ~ SPAD, data = maize)
+spad.model <- lm(FM_Rest_Ernteblatt ~ SPAD*Blattalter, data = maize)
 lab.model <- lm(FM_Rest_Ernteblatt ~ Chl_Labor, data = maize)
 dualex.model <- lm(FM_Rest_Ernteblatt ~ Chl, data = maize)
 multi.model1 <- lm(FM_Rest_Ernteblatt ~ SFR_R, data = maize)
@@ -37,6 +37,207 @@ shapiro.test(maize$SFR_G)
 shapiro.test(maize$NDWI)
 shapiro.test(maize$ChlNDI)
 
+#plotting the correlation matrix (whole dataset)
+#for now i used "DX_Chl_MW", "SFR_R" and "ChlNDI"
+
+cor.df <- select(maize, Chl_Labor, SPAD, DX_Chl_MW, SFR_R, ChlNDI)
+
+names(cor.df)[names(cor.df) == "Chl_Labor"] <- "Laboratory"
+names(cor.df)[names(cor.df) == "DX_Chl_MW"] <- "Dualex"
+names(cor.df)[names(cor.df) == "SFR_R"] <- "Multiplex"
+names(cor.df)[names(cor.df) == "ChlNDI"] <- "FieldSpec"
+
+cormat <- round(cor(cor.df, method = "spearman"),2)
+
+get_lower_tri<-function(cormat){
+  cormat[upper.tri(cormat)] <- NA
+  return(cormat)
+}
+
+get_upper_tri <- function(cormat){
+  cormat[lower.tri(cormat)]<- NA
+  return(cormat)
+}
+
+lt <- get_lower_tri(cormat)
+lt
+
+lt <- melt(lt)
+
+ggplot(lt, aes(Var2, Var1, fill = value))+
+  geom_tile(color = "white")+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(-1,1), space = "Lab", 
+                       name="Pearson\nCorrelation") +
+  theme_minimal()+ 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, 
+                                   size = 12, hjust = 1))+
+  coord_fixed()
+
+upper_tri <- get_upper_tri(cormat)
+
+melted_cormat <- melt(upper_tri, na.rm = TRUE)
+
+ggheatmap <- ggplot(melted_cormat, aes(Var2, Var1, fill = value))+
+  geom_tile(color = "white")+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(-1,1), space = "Lab", 
+                       name="Spearman\nCorrelation") +
+  theme_minimal()+ # minimal theme
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, 
+                                   size = 12, hjust = 1)) +
+  ggtitle("Correlation Matrix") +
+  coord_fixed()
+
+ggheatmap + 
+  geom_text(aes(Var2, Var1, label = value), color = "black", size = 4) +
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.border = element_blank(),
+    panel.background = element_blank(),
+    axis.ticks = element_blank(),
+    legend.justification = c(1, 0),
+    legend.position = c(0.6, 0.7),
+    plot.title = element_text(hjust = 0.5),
+    legend.direction = "horizontal")+
+  guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
+                               title.position = "top", title.hjust = 0.5))
+
+#SPAD
+a <- ggscatter(maize, x = "SPAD", y = "Chl_Labor", 
+               add = "reg.line",                        
+               conf.int = TRUE, cor.method = "spearman", cor.coef = TRUE,                       
+               color = "Treatment", palette = "jco", title = "SPAD",         
+               shape = "Treatment")
+
+e <- ggplot(maize, aes(x = SPAD, y = Chl_Labor, color = Treatment, shape = Treatment)) +
+  geom_point() + 
+  geom_smooth(method = lm) +
+  ggtitle("SPAD") +
+  theme_bw()
+
+#dualex
+b <- ggscatter(maize, x = "DX_Chl_MW", y = "Chl_Labor", 
+               add = "reg.line",                        
+               conf.int = TRUE, cor.method = "spearman", cor.coef = TRUE,                       
+               color = "Treatment", palette = "jco", title = "Dualex",           
+               shape = "Treatment")
+
+f <- ggplot(maize, aes(x = Chl, y = Chl_Labor, color = Treatment, shape = Treatment)) +
+  geom_point() + 
+  geom_smooth(method = lm) + 
+  ggtitle("Dualex") +
+  theme_bw()
+
+#multiplex
+c <- ggscatter(maize, x = "SFR_R", y = "Chl_Labor", 
+               add = "reg.line",                        
+               conf.int = TRUE, cor.method = "spearman", cor.coef = TRUE,                       
+               color = "Treatment", palette = "jco", title = "Multiplex",          
+               shape = "Treatment")
+
+g <- ggplot(maize, aes(x = SFR_R, y = Chl_Labor, color = Treatment, shape = Treatment)) +
+  geom_point() + 
+  geom_smooth(method = lm) + 
+  ggtitle("Multiplex") +
+  theme_bw()
+
+#FieldSpec
+d <- ggscatter(maize, x = "ChlNDI", y = "Chl_Labor", 
+               add = "reg.line",                        
+               conf.int = TRUE, cor.method = "spearman", cor.coef = TRUE,                       
+               color = "Treatment", palette = "jco", title = "Fieldspec",           
+               shape = "Treatment")
+
+h <- ggplot(maize, aes(x = ChlNDI, y = Chl_Labor, color = Treatment, shape = Treatment)) +
+  geom_point() + 
+  geom_smooth(method = lm) + 
+  ggtitle("Fieldspec") +
+  theme_bw()
+
+ggarrange(a, b, c, d)
+###ggarrange(e, f, g, h)###
+#not sure how to change the correlation coefficient in ggplot
+
+#phenological plots
+height <- maize[!duplicated(maize$Pflanzennummer), ]
+
+q <- ggplot(height, aes(x = Treatment, y = Pflanzenhoehe, fill = Treatment)) +
+  geom_boxplot(show.legend = FALSE) +
+  ggtitle("A") +
+  ylab("Plant height [cm]") +
+  geom_jitter(position = position_jitter(0.2), show.legend = FALSE) +
+  theme_bw() 
+q
+
+
+#leafe density
+dens <- maize[!duplicated(maize$Blattdichte), ]
+
+w <- ggplot(dens, aes(x = Treatment, y = Blattdichte, fill = Blattalter)) +
+  geom_boxplot(show.legend = TRUE) +
+  ggtitle("B") +
+  ylab("Leafe density [g/m^3 ?]") +
+  geom_jitter(position = position_jitter(0.2), show.legend = FALSE) +
+  theme_bw() 
+w
+
+w <- ggplot(dens, aes(x = Treatment, y = Blattdichte, fill = Treatment)) +
+  geom_boxplot(show.legend = FALSE) +
+  ggtitle("B") +
+  ylab("Leafe density [g/m^3 ?]") +
+  geom_jitter(position = position_jitter(0.2), show.legend = FALSE) +
+  theme_bw() 
+w
+
+#dry matter
+tm <- slice(height, 10:30)
+tm <- transform(tm, TM_Ganze_Pflanze = as.numeric(TM_Ganze_Pflanze))
+
+e <- ggplot(tm, aes(x = Treatment, y = TM_Ganze_Pflanze, fill = Treatment)) +
+  geom_boxplot(show.legend = FALSE) +
+  ggtitle("C") +
+  ylab("Dry Matter Content") +
+  geom_jitter(position = position_jitter(0.2), show.legend = FALSE) +
+  theme_bw() 
+e
+
+ggarrange(q, w, e)
+
+
+#2.lm und glm nochmal anschauen (evtl assignment?)
+#3.statistic teil schreiben
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+########
 #1.2 with treatment differentiation
 mangel <- filter(maize, Treatment == "Nährstoffmangel")
 trocken <- filter(maize, Treatment == "Trockenstress")
@@ -128,123 +329,6 @@ shapiro.test(kontr$SFR_R)
 shapiro.test(kontr$SFR_G)
 shapiro.test(kontr$NDWI)
 shapiro.test(kontr$ChlNDI)
-
-#2. plotting the correlation (I used pearson for now, not shure about it though)
-#2.1 whole dataset
-#correlation matrix
-cor.df <- select(maize, Chl_Labor, SPAD, Chl, SFR_R, ChlNDI)
-
-cormat <- round(cor(cor.df),2)
-
-get_lower_tri<-function(cormat){
-  cormat[upper.tri(cormat)] <- NA
-  return(cormat)
-}
-
-get_upper_tri <- function(cormat){
-  cormat[lower.tri(cormat)]<- NA
-  return(cormat)
-}
-
-lt <- get_lower_tri(cormat)
-lt
-
-lt <- melt(lt)
-
-ggplot(lt, aes(Var2, Var1, fill = value))+
-  geom_tile(color = "white")+
-  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
-                       midpoint = 0, limit = c(-1,1), space = "Lab", 
-                       name="Pearson\nCorrelation") +
-  theme_minimal()+ 
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, 
-                                   size = 12, hjust = 1))+
-  coord_fixed()
-  
-upper_tri <- get_upper_tri(cormat)
-
-melted_cormat <- melt(upper_tri, na.rm = TRUE)
-
-ggheatmap <- ggplot(melted_cormat, aes(Var2, Var1, fill = value))+
-  geom_tile(color = "white")+
-  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
-                       midpoint = 0, limit = c(-1,1), space = "Lab", 
-                       name="Pearson\nCorrelation") +
-  theme_minimal()+ # minimal theme
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, 
-                                   size = 12, hjust = 1)) +
-  ggtitle("No Treatment Differentiation") +
-  coord_fixed()
-
-ggheatmap + 
-  geom_text(aes(Var2, Var1, label = value), color = "black", size = 4) +
-  theme(
-    axis.title.x = element_blank(),
-    axis.title.y = element_blank(),
-    panel.grid.major = element_blank(),
-    panel.border = element_blank(),
-    panel.background = element_blank(),
-    axis.ticks = element_blank(),
-    legend.justification = c(1, 0),
-    legend.position = c(0.6, 0.7),
-    legend.direction = "horizontal")+
-  guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
-                               title.position = "top", title.hjust = 0.5))
-
-#SPAD
-a <- ggscatter(maize, x = "SPAD", y = "Chl_Labor", 
-          add = "reg.line",                        
-          conf.int = TRUE, cor.method = "pearson", cor.coef = TRUE,                       
-          color = "Treatment", palette = "jco", title = "SPAD",         
-          shape = "Treatment")
-
-e <- ggplot(maize, aes(x = SPAD, y = Chl_Labor, color = Treatment, shape = Treatment)) +
-  geom_point() + 
-  geom_smooth(method = lm) +
-  ggtitle("SPAD") +
-  theme_bw()
-  
-#dualex
-b <- ggscatter(maize, x = "Chl", y = "Chl_Labor", 
-          add = "reg.line",                        
-          conf.int = TRUE, cor.method = "pearson", cor.coef = TRUE,                       
-          color = "Treatment", palette = "jco", title = "Dualex",           
-          shape = "Treatment")
-
-f <- ggplot(maize, aes(x = Chl, y = Chl_Labor, color = Treatment, shape = Treatment)) +
-  geom_point() + 
-  geom_smooth(method = lm) + 
-  ggtitle("Dualex") +
-  theme_bw()
-
-#multiplex
-c <- ggscatter(maize, x = "SFR_R", y = "Chl_Labor", 
-          add = "reg.line",                        
-          conf.int = TRUE, cor.method = "pearson", cor.coef = TRUE,                       
-          color = "Treatment", palette = "jco", title = "Multiplex",          
-          shape = "Treatment")
-
-g <- ggplot(maize, aes(x = SFR_R, y = Chl_Labor, color = Treatment, shape = Treatment)) +
-  geom_point() + 
-  geom_smooth(method = lm) + 
-  ggtitle("Multiplex") +
-  theme_bw()
-
-#FieldSpec
-d <- ggscatter(maize, x = "ChlNDI", y = "Chl_Labor", 
-          add = "reg.line",                        
-          conf.int = TRUE, cor.method = "pearson", cor.coef = TRUE,                       
-          color = "Treatment", palette = "jco", title = "Fieldspec",           
-          shape = "Treatment")
-
-h <- ggplot(maize, aes(x = ChlNDI, y = Chl_Labor, color = Treatment, shape = Treatment)) +
-  geom_point() + 
-  geom_smooth(method = lm) + 
-  ggtitle("Fieldspec") +
-  theme_bw()
-
-ggarrange(a, b, c, d)
-ggarrange(e, f, g, h)
 
 #2.2 with treatment differentiation 
 #mangel
@@ -445,67 +529,12 @@ d <- ggscatter(kontr, x = "ChlNDI", y = "Chl_Labor",
 
 ggarrange(a, b, c, d)
 
-#phenological plots
-#height -> strange error if you add notches, maybe look at this again
-q <- ggplot(maize, aes(x = Treatment, y = Pflanzenhoehe, fill = Treatment)) +
-  geom_boxplot(show.legend = FALSE) +
-  ggtitle("A") +
-  ylab("Plant height [cm?]") +
-  geom_jitter(position = position_jitter(0.2), show.legend = FALSE) +
-  theme_bw() 
-q
 
-#leafe density
-w <- ggplot(maize, aes(x = Treatment, y = Blattdichte, fill = Treatment)) +
-  geom_boxplot(show.legend = FALSE) +
-  ggtitle("B") +
-  ylab("Leafe density [Leaves/?]") +
-  geom_jitter(position = position_jitter(0.2), show.legend = FALSE) +
-  theme_bw() 
-w
 
-ggarrange(q, w)
 
-#testing if the treatments have a sig. effect on the Plantheight
-h1 <- lm(Pflanzenhoehe ~ Treatment, data = maize)
-summary(h1)
 
-h0 <- lm(Pflanzenhoehe ~ 1, data = maize)
-summary(h0)
 
-par(mfrow = c(2, 2))
-plot(h1)
-plot(h0)
-par(mfrow = c(1, 1))
 
-shapiro.test(maize$Pflanzenhoehe)
-
-anova(h1, h0) #h1 is definitely the better model, but seems to be not nd
-#p-value if we use lm and expect this to be nd: 0.0003835 -> Treatments have an effect
-
-#using glm 
-h1 <- glm(Pflanzenhoehe ~ Treatment, data = maize)
-summary(h1)
-#Nährstoffmangel seems to have a significant effect, trockenstress not??? (not sure about this, 
-#never used a glm)
-
-#testing if the treatments have a sig. effect on the chl_lab content
-h1 <- lm(Chl_Labor ~ Treatment, data = maize)
-summary(h1)
-
-h0 <- lm(Chl_Labor ~ 1, data = maize)
-summary(h0)
-
-par(mfrow = c(2, 2))
-plot(h1)
-plot(h0)
-par(mfrow = c(1, 1))
-
-shapiro.test(maize$Chl_Labor)
-
-anova(h1, h0)
-#The treatments seem to have a sign effect on the chl lab content and nd seems at least more likely
-#p-value: 0.007401
 
 
 
