@@ -204,7 +204,17 @@ e <- ggplot(tm, aes(x = Treatment, y = TM_Ganze_Pflanze, fill = Treatment)) +
   theme_bw() 
 e
 
-ggarrange(q, w, e)
+#chlorophyll lab
+r <- ggplot(dens, aes(x = Treatment, y = Chl_Labor, fill = Treatment)) +
+  geom_boxplot(show.legend = FALSE) +
+  ggtitle("C") +
+  ylab("Chlorophyll Content [??]") +
+  geom_jitter(position = position_jitter(0.2), show.legend = FALSE) +
+  theme_bw() 
+r
+
+
+ggarrange(q, w, e, r)
 
 
 #2.lm und glm nochmal anschauen (evtl assignment?)
