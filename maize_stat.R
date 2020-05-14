@@ -8,7 +8,7 @@ library(lme4)
 maize <- read_excel("Maize dataset.xlsx")
 
 #statistics
-#testing if the treatments have a sig. effect on the Plantheight
+#testing if the treatments are effecting the Plantheight
 height <- maize[!duplicated(maize$Pflanzennummer), ]
 
 h1 <- lm(Pflanzenhoehe ~ Treatment, data = height)
@@ -27,7 +27,7 @@ anova(h1, h0) #h1 seems to be the better model
 #which however is not significant
 
 
-#testing if the treatments/leave age have a sig. effect on the chl_labor content
+#testing if the treatments/leave age are effecting the chl_labor content
 lab <- maize[!duplicated(maize$Chl_Labor), ]
 
 lab$Treatment[lab$Treatment == "Nährstoffmangel"] <- "mngl"
@@ -72,8 +72,24 @@ ggplot(maize, aes(x = Treatment, y = Chl_Labor, col = Blattalter)) +
 #this shows that we have a strong leave age effect, a small treatment effect and a small
 #interaction between those two effects 
 
+#checking if the treatments effect the DM
+tm <- slice(height, 10:30)
+tm <- transform(tm, TM_Ganze_Pflanze = as.numeric(TM_Ganze_Pflanze))
 
+h1 <- lm(TM_Ganze_Pflanze ~ Treatment, data = tm)
+summary(h1)
 
+h0 <- lm(TM_Ganze_Pflanze ~ 1, data = tm)
+summary(h0)
+
+par(mfrow = c(2, 2))
+plot(h1)
+plot(h0)
+par(mfrow = c(1, 1))
+
+anova(h1, h0) #h1 seems to be the better model
+#p-value if we expect this to be nd: 0.08914 -> Treatments have an effect on the 
+#dry matter content, which however is not significant
 
 
 

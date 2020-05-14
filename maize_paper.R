@@ -217,37 +217,10 @@ r
 ggarrange(q, w, e, r)
 
 
-#2.lm und glm nochmal anschauen (evtl assignment?)
-#3.statistic teil schreiben
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 ########
+#stuff we probably wont need anymore
 #1.2 with treatment differentiation
 mangel <- filter(maize, Treatment == "Nährstoffmangel")
 trocken <- filter(maize, Treatment == "Trockenstress")
