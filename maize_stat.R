@@ -45,6 +45,13 @@ confint(h2, parm = "sd_(Intercept)|Blattalter", level=0.95,
 #-> reject the null hypothesis that the variance is zero.
 #a significant effect of leave age on the chlorophyll content can be shown 
 
+h3 <- lmer(Chl_Labor ~ (1 | Blattalter), data = lab)
+
+summary(h3)
+anova(h2, h3)#h2 seems to be the better model
+#p-value: 4.006e-05 -> Treatments have a significant effect on the chlorophyll content
+
+###
 h1 <- lm(Chl_Labor ~ Treatment, data = lab)
 summary(h1)
 
@@ -59,6 +66,8 @@ par(mfrow = c(1, 1))
 anova(h1, h0) #h1 seems to be the better model
 #p-value if we expect this to be nd: 0.09161 -> Treatments have an effect on the 
 #chlorophyll content, which however is not significant
+###
+
 
 #interaction plot
 ggplot(maize, aes(x = Treatment, y = Chl_Labor, col = Blattalter)) + 
