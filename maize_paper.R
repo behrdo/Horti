@@ -38,14 +38,17 @@ shapiro.test(maize$NDWI)
 shapiro.test(maize$ChlNDI)
 
 #plotting the correlation matrix (whole dataset)
-#for now i used "DX_Chl_MW", "SFR_R" and "ChlNDI"
-
-cor.df <- select(maize, Chl_Labor, SPAD, DX_Chl_MW, SFR_R, ChlNDI)
+cor.df <- select(maize, Chl_Labor, SPAD, DX_Chl_MW, SFR_R, ChlNDI, NDopt, mND, mSR, NDVI)
 
 names(cor.df)[names(cor.df) == "Chl_Labor"] <- "Laboratory"
 names(cor.df)[names(cor.df) == "DX_Chl_MW"] <- "Dualex"
 names(cor.df)[names(cor.df) == "SFR_R"] <- "Multiplex"
-names(cor.df)[names(cor.df) == "ChlNDI"] <- "FieldSpec"
+names(cor.df)[names(cor.df) == "ChlNDI"] <- "FS_ChlNDI"
+names(cor.df)[names(cor.df) == "NDopt"] <- "FS_NDopt"
+names(cor.df)[names(cor.df) == "mND"] <- "FS_mND"
+names(cor.df)[names(cor.df) == "mSR"] <- "FS_mSR"
+names(cor.df)[names(cor.df) == "NDVI"] <- "FS_NDVI"
+
 
 cormat <- round(cor(cor.df, method = "spearman"),2)
 
@@ -83,7 +86,7 @@ ggheatmap <- ggplot(melted_cormat, aes(Var2, Var1, fill = value))+
   scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
                        midpoint = 0, limit = c(-1,1), space = "Lab", 
                        name="Spearman\nCorrelation") +
-  theme_minimal()+ # minimal theme
+  theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, 
                                    size = 12, hjust = 1)) +
   ggtitle("Correlation Matrix") +
@@ -105,63 +108,87 @@ ggheatmap +
   guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
                                title.position = "top", title.hjust = 0.5))
 
-#SPAD
-a <- ggscatter(maize, x = "SPAD", y = "Chl_Labor", 
-               add = "reg.line",                        
-               conf.int = TRUE, cor.method = "spearman", cor.coef = TRUE,                       
-               color = "Treatment", palette = "jco", title = "SPAD",         
-               shape = "Treatment")
 
-e <- ggplot(maize, aes(x = SPAD, y = Chl_Labor, color = Treatment, shape = Treatment)) +
+#correlation scatterplots without leave age differentiation
+#SPAD
+e <- ggplot(maize, aes(x = SPAD, y = Chl_Labor, color = Treatment)) +
   geom_point() + 
   geom_smooth(method = lm) +
   ggtitle("SPAD") +
   theme_bw()
 
-#dualex
-b <- ggscatter(maize, x = "DX_Chl_MW", y = "Chl_Labor", 
-               add = "reg.line",                        
-               conf.int = TRUE, cor.method = "spearman", cor.coef = TRUE,                       
-               color = "Treatment", palette = "jco", title = "Dualex",           
-               shape = "Treatment")
-
-f <- ggplot(maize, aes(x = Chl, y = Chl_Labor, color = Treatment, shape = Treatment)) +
+f <- ggplot(maize, aes(x = Chl, y = Chl_Labor, color = Treatment)) +
   geom_point() + 
   geom_smooth(method = lm) + 
   ggtitle("Dualex") +
   theme_bw()
 
-#multiplex
-c <- ggscatter(maize, x = "SFR_R", y = "Chl_Labor", 
-               add = "reg.line",                        
-               conf.int = TRUE, cor.method = "spearman", cor.coef = TRUE,                       
-               color = "Treatment", palette = "jco", title = "Multiplex",          
-               shape = "Treatment")
-
-g <- ggplot(maize, aes(x = SFR_R, y = Chl_Labor, color = Treatment, shape = Treatment)) +
+g <- ggplot(maize, aes(x = SFR_R, y = Chl_Labor, color = Treatment)) +
   geom_point() + 
   geom_smooth(method = lm) + 
   ggtitle("Multiplex") +
   theme_bw()
 
-#FieldSpec
-d <- ggscatter(maize, x = "ChlNDI", y = "Chl_Labor", 
-               add = "reg.line",                        
-               conf.int = TRUE, cor.method = "spearman", cor.coef = TRUE,                       
-               color = "Treatment", palette = "jco", title = "Fieldspec",           
-               shape = "Treatment")
-
-h <- ggplot(maize, aes(x = ChlNDI, y = Chl_Labor, color = Treatment, shape = Treatment)) +
+h <- ggplot(maize, aes(x = ChlNDI, y = Chl_Labor, color = Treatment)) +
   geom_point() + 
   geom_smooth(method = lm) + 
   ggtitle("Fieldspec") +
   theme_bw()
 
-ggarrange(a, b, c, d)
-###ggarrange(e, f, g, h)###
-#not sure how to change the correlation coefficient in ggplot
+ggarrange(e, f, g, h, ncol = 2, nrow = 2, common.legend = TRUE, legend = "bottom")
 
-#phenological plots
+
+#correlation scatterplots with leave age differentiation
+e <- ggplot(maize, aes(x = SPAD, y = Chl_Labor, color = Treatment, shape = Blattalter)) +
+  geom_point() + 
+  geom_smooth(method = lm) +
+  ggtitle("SPAD") +
+  theme_bw()
+
+f <- ggplot(maize, aes(x = Chl, y = Chl_Labor, color = Treatment, shape = Blattalter)) +
+  geom_point() + 
+  geom_smooth(method = lm) + 
+  ggtitle("Dualex") +
+  theme_bw()
+
+g <- ggplot(maize, aes(x = SFR_R, y = Chl_Labor, color = Treatment, shape = Blattalter)) +
+  geom_point() + 
+  geom_smooth(method = lm) + 
+  ggtitle("Multiplex") +
+  theme_bw()
+
+h <- ggplot(maize, aes(x = ChlNDI, y = Chl_Labor, color = Treatment, shape = Blattalter)) +
+  geom_point() + 
+  geom_smooth(method = lm) + 
+  ggtitle("Fieldspec") +
+  theme_bw()
+
+ggarrange(e, f, g, h, ncol = 2, nrow = 2, common.legend = TRUE, legend = "bottom")
+
+#scatterplot without geom_smooth
+i <- ggplot(maize, aes(x = SPAD, y = Chl_Labor, color = Treatment, shape = Blattalter)) +
+  geom_point() + 
+  ggtitle("SPAD") +
+  theme_bw()
+
+j <- ggplot(maize, aes(x = Chl, y = Chl_Labor, color = Treatment, shape = Blattalter)) +
+  geom_point() + 
+  ggtitle("Dualex") +
+  theme_bw()
+
+k <- ggplot(maize, aes(x = SFR_R, y = Chl_Labor, color = Treatment, shape = Blattalter)) +
+  geom_point() + 
+  ggtitle("Multiplex") +
+  theme_bw()
+
+l <- ggplot(maize, aes(x = ChlNDI, y = Chl_Labor, color = Treatment, shape = Blattalter)) +
+  geom_point() + 
+  ggtitle("Fieldspec") +
+  theme_bw()
+
+ggarrange(i, j, k, l, ncol = 2, nrow = 2, common.legend = TRUE, legend = "bottom")
+
+#morphological plots
 height <- maize[!duplicated(maize$Pflanzennummer), ]
 
 q <- ggplot(height, aes(x = Treatment, y = Pflanzenhoehe, fill = Treatment)) +
@@ -213,9 +240,38 @@ r <- ggplot(dens, aes(x = Treatment, y = Chl_Labor, fill = Treatment)) +
   theme_bw() 
 r
 
-
 ggarrange(q, w, e, r)
 
+#field spec clor a and b + lab clor a and b
+m <- ggplot(maize, aes(x = PSSRa, y = Chl_a_nmol_g_EW, color = Treatment, shape = Blattalter)) +
+  geom_point() + 
+  geom_smooth(method = lm) +
+  ggtitle("Chl a") + 
+  theme_bw()
+
+n <- ggplot(maize, aes(x = PSSRb, y = Chl_b_nmol_g_EW, color = Treatment, shape = Blattalter)) +
+  geom_point() + 
+  geom_smooth(method = lm) +
+  ggtitle("Chl b") + 
+  theme_bw()
+
+ggarrange(m, n, ncol = 2, nrow = 1, common.legend = TRUE, legend = "bottom")
+
+
+o <- ggscatter(maize, x = "PSSRa", y = "Chl_a_nmol_g_EW", 
+               add = "reg.line",                        
+               conf.int = TRUE, cor.method = "spearman", cor.coef = TRUE,                       
+               color = "Treatment", palette = "jco", title = "Chl a",          
+               shape = "Treatment")
+
+
+p <- ggscatter(maize, x = "PSSRb", y = "Chl_b_nmol_g_EW", 
+               add = "reg.line",                        
+               conf.int = TRUE, cor.method = "spearman", cor.coef = TRUE,                       
+               color = "Treatment", palette = "jco", title =  "Chl b",          
+               shape = "Treatment")
+
+ggarrange(o, p, ncol = 2, nrow = 1, common.legend = TRUE, legend = "bottom")
 
 
 

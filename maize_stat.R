@@ -27,7 +27,24 @@ anova(h1, h0) #h1 seems to be the better model
 #which however is not significant
 
 
-#testing if the treatments/leave age are effecting the chl_labor content
+#one-way anova for treatment
+h1 <- lm(Chl_Labor ~ Treatment, data = lab)
+summary(h1)
+
+h0 <- lm(Chl_Labor ~ 1, data = lab)
+summary(h0)
+
+par(mfrow = c(2, 2))
+plot(h1)
+plot(h0)
+par(mfrow = c(1, 1))
+
+anova(h1, h0) #h1 seems to be the better model
+#p-value if we expect this to be nd: 0.09161 -> Treatments have an effect on the 
+#chlorophyll content, which however is not significant
+
+
+#two way anova for treatments/leave 
 lab <- maize[!duplicated(maize$Chl_Labor), ]
 
 lab$Treatment[lab$Treatment == "Nährstoffmangel"] <- "mngl"
@@ -50,24 +67,6 @@ h3 <- lmer(Chl_Labor ~ (1 | Blattalter), data = lab)
 summary(h3)
 anova(h2, h3)#h2 seems to be the better model
 #p-value: 4.006e-05 -> Treatments have a significant effect on the chlorophyll content
-
-###
-h1 <- lm(Chl_Labor ~ Treatment, data = lab)
-summary(h1)
-
-h0 <- lm(Chl_Labor ~ 1, data = lab)
-summary(h0)
-
-par(mfrow = c(2, 2))
-plot(h1)
-plot(h0)
-par(mfrow = c(1, 1))
-
-anova(h1, h0) #h1 seems to be the better model
-#p-value if we expect this to be nd: 0.09161 -> Treatments have an effect on the 
-#chlorophyll content, which however is not significant
-###
-
 
 #interaction plot
 ggplot(maize, aes(x = Treatment, y = Chl_Labor, col = Blattalter)) + 
