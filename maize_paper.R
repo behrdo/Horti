@@ -110,7 +110,6 @@ ggheatmap +
 
 
 #correlation scatterplots without leave age differentiation
-#SPAD
 e <- ggplot(maize, aes(x = SPAD, y = Chl_Labor, color = Treatment)) +
   geom_point() + 
   geom_smooth(method = lm) +
