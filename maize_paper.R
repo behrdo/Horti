@@ -37,14 +37,6 @@ shapiro.test(maize$NDWI)
 shapiro.test(maize$ChlNDI)
 
 #plotting the correlation matrix
-###
-#chl indices that were used previously: SFR_R, NDopt, mND, mSR, NDVI
-#names(cor.df)[names(cor.df) == "NDopt"] <- "FS_NDopt"
-#names(cor.df)[names(cor.df) == "mND"] <- "FS_mND"
-#names(cor.df)[names(cor.df) == "mSR"] <- "FS_mSR"
-#names(cor.df)[names(cor.df) == "NDVI"] <- "FS_NDVI"
-###
-
 cor.df <- select(maize, Chl_Labor, SPAD, DX_Chl_MW, SFR_R, ChlNDI)
 
 names(cor.df)[names(cor.df) == "Chl_Labor"] <- "Laboratory"
@@ -121,27 +113,32 @@ e <- ggplot(maize, aes(x = SPAD, y = Chl_Labor, color = Treatment, shape = Blatt
   geom_smooth(method = lm) +
   labs(shape = "Leaf age", x = "SPAD value", 
        y = bquote("Chlorophyll content [nmol" ~ g^-1 ~ "]"),
-         title = "A") +
+         title = "(A)") +
   scale_x_continuous(expand = c(0, 0), limits = c(0, 50)) +
   scale_y_continuous(expand = c(0, 0), limits = c(0, 300)) +
   scale_color_manual(values = c("red3", "#0072B2", "#F0E442")) +
   theme_bw() +
-  theme(axis.text = element_text(size = 10), axis.title = element_text(size = 11), 
-        plot.title = element_text(size = 15), strip.text.y = element_text(size = 10), 
+  theme(axis.text = element_text(size = 10), 
+        axis.title = element_text(size = 11), 
+        plot.title = element_text(size = 15, vjust = -10, hjust = 0.03),
+        strip.text.y = element_text(size = 10), 
         strip.text.x = element_text(size = 10))
+e
 
 f <- ggplot(maize, aes(x = Chl, y = Chl_Labor, color = Treatment, shape = Blattalter)) +
   geom_point() + 
   geom_smooth(method = lm) + 
   labs(shape = "Leaf age", x = "Dualex value", 
        y = bquote("Chlorophyll content [nmol" ~ g^-1 ~ "]"),
-       title = "B") +
+       title = "(B)") +
   scale_x_continuous(expand = c(0, 0), limits = c(0, 42)) +
   scale_y_continuous(expand = c(0, 0), limits = c(0, 300)) +
   scale_color_manual(values = c("red3", "#0072B2", "#F0E442")) +
   theme_bw() +
-  theme(axis.text = element_text(size = 10), axis.title = element_text(size = 11), 
-        plot.title = element_text(size = 15), strip.text.y = element_text(size = 10), 
+  theme(axis.text = element_text(size = 10), 
+        axis.title = element_text(size = 11), 
+        plot.title = element_text(size = 15, vjust = -10, hjust = 0.03), 
+        strip.text.y = element_text(size = 10), 
         strip.text.x = element_text(size = 10))
 
 g <- ggplot(maize, aes(x = SFR_R, y = Chl_Labor, color = Treatment, shape = Blattalter)) +
@@ -149,13 +146,15 @@ g <- ggplot(maize, aes(x = SFR_R, y = Chl_Labor, color = Treatment, shape = Blat
   geom_smooth(method = lm) + 
   labs(shape = "Leaf age", x = "Multiplex value", 
        y = bquote("Chlorophyll content [nmol" ~ g^-1 ~ "]"),
-       title = "C") +
+       title = "(C)") +
   scale_x_continuous(expand = c(0, 0), limits = c(0, 1.5)) +
   scale_y_continuous(expand = c(0, 0), limits = c(0, 300)) +
   scale_color_manual(values = c("red3", "#0072B2", "#F0E442")) +
   theme_bw() + 
-  theme(axis.text = element_text(size = 10), axis.title = element_text(size = 11), 
-        plot.title = element_text(size = 15), strip.text.y = element_text(size = 10), 
+  theme(axis.text = element_text(size = 10), 
+        axis.title = element_text(size = 11), 
+        plot.title = element_text(size = 15, vjust = -10, hjust = 0.03), 
+        strip.text.y = element_text(size = 10), 
         strip.text.x = element_text(size = 10))
 
 h <- ggplot(maize, aes(x = ChlNDI, y = Chl_Labor, color = Treatment, shape = Blattalter)) +
@@ -163,13 +162,15 @@ h <- ggplot(maize, aes(x = ChlNDI, y = Chl_Labor, color = Treatment, shape = Bla
   geom_smooth(method = lm) + 
   labs(shape = "Leaf age", x = "Fieldspec value", 
        y = bquote("Chlorophyll content [nmol" ~ g^-1 ~ "]"),
-       title = "D") +
+       title = "(D)") +
   scale_x_continuous(expand = c(0, 0), limits = c(0, 0.61)) +
   scale_y_continuous(expand = c(0, 0), limits = c(0, 300)) +
   scale_color_manual(values = c("red3", "#0072B2", "#F0E442")) +
   theme_bw() + 
-  theme(axis.text = element_text(size = 10), axis.title = element_text(size = 11), 
-        plot.title = element_text(size = 15), strip.text.y = element_text(size = 10), 
+  theme(axis.text = element_text(size = 10), 
+        axis.title = element_text(size = 11), 
+        plot.title = element_text(size = 15, vjust = -10, hjust = 0.03), 
+        strip.text.y = element_text(size = 10), 
         strip.text.x = element_text(size = 10))
 
 ggarrange(e, f, g, h, ncol = 2, nrow = 2, common.legend = TRUE, legend = "bottom")
@@ -182,41 +183,78 @@ height <- maize[!duplicated(maize$Pflanzennummer), ]
 tm <- slice(height, 10:30)
 tm <- transform(tm, TM_Ganze_Pflanze = as.numeric(TM_Ganze_Pflanze))
 
+addline_format <- function(x,...){
+  gsub("\\s","\n",x)
+}
+
 #height
 q <- ggplot(height, aes(x = Treatment, y = Pflanzenhoehe, fill = Treatment)) +
   geom_boxplot(show.legend = FALSE) +
-  ggtitle("A") +
+  ggtitle("(C)") +
   ylab("Plant height [cm]") +
   scale_fill_manual(values = c("red3", "#0072B2", "#F0E442")) +
+  scale_x_discrete(breaks = unique(height$Treatment),
+                   labels = addline_format(c("Nutrient deficiency", "Drought", "Control"))) +
   geom_jitter(position = position_jitter(0.2), show.legend = FALSE) +
   theme_bw() +
-  theme(axis.text = element_text(size = 10), axis.title = element_text(size = 11), 
-        plot.title = element_text(size = 15), strip.text.y = element_text(size = 10), 
+  theme(axis.text = element_text(size = 10), 
+        axis.title = element_text(size = 11), 
+        plot.title = element_text(size = 15, vjust = -10, hjust = 0.98), 
+        strip.text.y = element_text(size = 10), 
         strip.text.x = element_text(size = 10))
 
 #dry matter
 w <- ggplot(tm, aes(x = Treatment, y = TM_Ganze_Pflanze, fill = Treatment)) +
   geom_boxplot(show.legend = FALSE) +
-  ggtitle("B") +
+  ggtitle("(B)") +
   ylab("Dry matter per plant [g]") +
   scale_fill_manual(values = c("red3", "#0072B2", "#F0E442")) +
+  scale_x_discrete(breaks = unique(height$Treatment),
+                   labels = addline_format(c("Nutrient deficiency", "Drought", "Control"))) +
   geom_jitter(position = position_jitter(0.2), show.legend = FALSE) +
   theme_bw() +
-  theme(axis.text = element_text(size = 10), axis.title = element_text(size = 11), 
-        plot.title = element_text(size = 15), strip.text.y = element_text(size = 10), 
+  theme(axis.text = element_text(size = 10), 
+        axis.title = element_text(size = 11), 
+        plot.title = element_text(size = 15, vjust = -10, hjust = 0.98), 
+        strip.text.y = element_text(size = 10), 
         strip.text.x = element_text(size = 10))
 
 #chlorophyll lab
 r <- ggplot(chl, aes(x = Treatment, y = Chl_Labor, fill = Treatment)) +
   geom_boxplot(show.legend = FALSE) +
-  ggtitle("C") +
+  ggtitle("(A)") +
   ylab("Chlorophyll content [nmol" ~ g^-1 ~ "]") +
   scale_fill_manual(values = c("red3", "#0072B2", "#F0E442")) +
+  scale_x_discrete(breaks = unique(height$Treatment),
+                   labels = addline_format(c("Nutrient deficiency", "Drought", "Control"))) +
   geom_jitter(position = position_jitter(0.2), show.legend = FALSE) +
   theme_bw() +
-  theme(axis.text = element_text(size = 10), axis.title = element_text(size = 11), 
-        plot.title = element_text(size = 15), strip.text.y = element_text(size = 10), 
+  theme(axis.text = element_text(size = 10), 
+        axis.title = element_text(size = 11), 
+        plot.title = element_text(size = 15, vjust = -10, hjust = 0.98), 
+        strip.text.y = element_text(size = 10), 
         strip.text.x = element_text(size = 10))
 
-ggarrange(q, w, r, ncol = 3, nrow = 1)
+ggarrange(r, w, q, ncol = 3, nrow = 1)
+
+#interaction plot
+ggplot(maize, aes(x = Treatment, y = Chl_Labor, shape = Blattalter, fill = Treatment)) + 
+  geom_boxplot(show.legend = FALSE) + 
+  geom_jitter(position = position_jitter(0.2)) + 
+  labs(shape = "Leaf age", 
+       y = bquote("Chlorophyll content [nmol  " ~ g^-1 ~ "]")) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 300)) + 
+  scale_fill_manual(values = c("red3", "#0072B2", "#F0E442")) + 
+  theme_bw() +
+  guides(fill = FALSE) + 
+  theme(axis.text = element_text(size = 11), 
+        axis.title = element_text(size = 13), 
+        strip.text.y = element_text(size = 10), 
+        strip.text.x = element_text(size = 10), 
+        legend.position = c(0.9, 0.9))
+
+
+
+
+
 

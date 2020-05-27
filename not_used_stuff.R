@@ -1,5 +1,13 @@
 ########
 #stuff we probably wont need anymore
+###
+#chl indices that were used previously: SFR_R, NDopt, mND, mSR, NDVI
+#names(cor.df)[names(cor.df) == "NDopt"] <- "FS_NDopt"
+#names(cor.df)[names(cor.df) == "mND"] <- "FS_mND"
+#names(cor.df)[names(cor.df) == "mSR"] <- "FS_mSR"
+#names(cor.df)[names(cor.df) == "NDVI"] <- "FS_NDVI"
+###
+
 #scatterplot without geom_smooth
 i <- ggplot(maize, aes(x = SPAD, y = Chl_Labor, color = Treatment, shape = Blattalter)) +
   geom_point() + 
