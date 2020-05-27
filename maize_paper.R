@@ -7,8 +7,7 @@ library(lme4)
 
 maize <- read_excel("Maize dataset.xlsx")
 
-#1. checking for normal distribution
-#1.1 without treatment differentiation
+#checking for normal distribution to figure out which cor.coef to use
 spad.model <- lm(FM_Rest_Ernteblatt ~ SPAD*Blattalter, data = maize)
 lab.model <- lm(FM_Rest_Ernteblatt ~ Chl_Labor, data = maize)
 dualex.model <- lm(FM_Rest_Ernteblatt ~ Chl, data = maize)
@@ -37,18 +36,21 @@ shapiro.test(maize$SFR_G)
 shapiro.test(maize$NDWI)
 shapiro.test(maize$ChlNDI)
 
-#plotting the correlation matrix (whole dataset)
-cor.df <- select(maize, Chl_Labor, SPAD, DX_Chl_MW, SFR_R, ChlNDI, NDopt, mND, mSR, NDVI)
+#plotting the correlation matrix
+###
+#chl indices that were used previously: SFR_R, NDopt, mND, mSR, NDVI
+#names(cor.df)[names(cor.df) == "NDopt"] <- "FS_NDopt"
+#names(cor.df)[names(cor.df) == "mND"] <- "FS_mND"
+#names(cor.df)[names(cor.df) == "mSR"] <- "FS_mSR"
+#names(cor.df)[names(cor.df) == "NDVI"] <- "FS_NDVI"
+###
+
+cor.df <- select(maize, Chl_Labor, SPAD, DX_Chl_MW, SFR_R, ChlNDI)
 
 names(cor.df)[names(cor.df) == "Chl_Labor"] <- "Laboratory"
 names(cor.df)[names(cor.df) == "DX_Chl_MW"] <- "Dualex"
 names(cor.df)[names(cor.df) == "SFR_R"] <- "Multiplex"
-names(cor.df)[names(cor.df) == "ChlNDI"] <- "FS_ChlNDI"
-names(cor.df)[names(cor.df) == "NDopt"] <- "FS_NDopt"
-names(cor.df)[names(cor.df) == "mND"] <- "FS_mND"
-names(cor.df)[names(cor.df) == "mSR"] <- "FS_mSR"
-names(cor.df)[names(cor.df) == "NDVI"] <- "FS_NDVI"
-
+names(cor.df)[names(cor.df) == "ChlNDI"] <- "FieldSpec"
 
 cormat <- round(cor(cor.df, method = "spearman"),2)
 
@@ -89,7 +91,6 @@ ggheatmap <- ggplot(melted_cormat, aes(Var2, Var1, fill = value))+
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, 
                                    size = 12, hjust = 1)) +
-  ggtitle("Correlation Matrix") +
   coord_fixed()
 
 ggheatmap + 
@@ -108,472 +109,114 @@ ggheatmap +
   guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
                                title.position = "top", title.hjust = 0.5))
 
-
-#correlation scatterplots without leave age differentiation
-e <- ggplot(maize, aes(x = SPAD, y = Chl_Labor, color = Treatment)) +
-  geom_point() + 
-  geom_smooth(method = lm) +
-  ggtitle("SPAD") +
-  theme_bw()
-
-f <- ggplot(maize, aes(x = Chl, y = Chl_Labor, color = Treatment)) +
-  geom_point() + 
-  geom_smooth(method = lm) + 
-  ggtitle("Dualex") +
-  theme_bw()
-
-g <- ggplot(maize, aes(x = SFR_R, y = Chl_Labor, color = Treatment)) +
-  geom_point() + 
-  geom_smooth(method = lm) + 
-  ggtitle("Multiplex") +
-  theme_bw()
-
-h <- ggplot(maize, aes(x = ChlNDI, y = Chl_Labor, color = Treatment)) +
-  geom_point() + 
-  geom_smooth(method = lm) + 
-  ggtitle("Fieldspec") +
-  theme_bw()
-
-ggarrange(e, f, g, h, ncol = 2, nrow = 2, common.legend = TRUE, legend = "bottom")
-
-
 #correlation scatterplots with leave age differentiation
+maize$Blattalter[maize$Blattalter == "jung"] <- "Young"
+maize$Blattalter[maize$Blattalter == "alt"] <- "Old"
+maize$Treatment[maize$Treatment == "Nährstoffmangel"] <- "Nutrient deficiency"
+maize$Treatment[maize$Treatment == "Trockenstress"] <- "Drought"
+maize$Treatment[maize$Treatment == "Kontrolle"] <- "Control"
+
 e <- ggplot(maize, aes(x = SPAD, y = Chl_Labor, color = Treatment, shape = Blattalter)) +
   geom_point() + 
   geom_smooth(method = lm) +
-  ggtitle("SPAD") +
-  theme_bw()
+  labs(shape = "Leaf age", x = "SPAD value", 
+       y = bquote("Chlorophyll content [nmol" ~ g^-1 ~ "]"),
+         title = "A") +
+  scale_x_continuous(expand = c(0, 0), limits = c(0, 50)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 300)) +
+  scale_color_manual(values = c("red3", "#0072B2", "#F0E442")) +
+  theme_bw() +
+  theme(axis.text = element_text(size = 10), axis.title = element_text(size = 11), 
+        plot.title = element_text(size = 15), strip.text.y = element_text(size = 10), 
+        strip.text.x = element_text(size = 10))
 
 f <- ggplot(maize, aes(x = Chl, y = Chl_Labor, color = Treatment, shape = Blattalter)) +
   geom_point() + 
   geom_smooth(method = lm) + 
-  ggtitle("Dualex") +
-  theme_bw()
+  labs(shape = "Leaf age", x = "Dualex value", 
+       y = bquote("Chlorophyll content [nmol" ~ g^-1 ~ "]"),
+       title = "B") +
+  scale_x_continuous(expand = c(0, 0), limits = c(0, 42)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 300)) +
+  scale_color_manual(values = c("red3", "#0072B2", "#F0E442")) +
+  theme_bw() +
+  theme(axis.text = element_text(size = 10), axis.title = element_text(size = 11), 
+        plot.title = element_text(size = 15), strip.text.y = element_text(size = 10), 
+        strip.text.x = element_text(size = 10))
 
 g <- ggplot(maize, aes(x = SFR_R, y = Chl_Labor, color = Treatment, shape = Blattalter)) +
   geom_point() + 
   geom_smooth(method = lm) + 
-  ggtitle("Multiplex") +
-  theme_bw()
+  labs(shape = "Leaf age", x = "Multiplex value", 
+       y = bquote("Chlorophyll content [nmol" ~ g^-1 ~ "]"),
+       title = "C") +
+  scale_x_continuous(expand = c(0, 0), limits = c(0, 1.5)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 300)) +
+  scale_color_manual(values = c("red3", "#0072B2", "#F0E442")) +
+  theme_bw() + 
+  theme(axis.text = element_text(size = 10), axis.title = element_text(size = 11), 
+        plot.title = element_text(size = 15), strip.text.y = element_text(size = 10), 
+        strip.text.x = element_text(size = 10))
 
 h <- ggplot(maize, aes(x = ChlNDI, y = Chl_Labor, color = Treatment, shape = Blattalter)) +
   geom_point() + 
   geom_smooth(method = lm) + 
-  ggtitle("Fieldspec") +
-  theme_bw()
+  labs(shape = "Leaf age", x = "Fieldspec value", 
+       y = bquote("Chlorophyll content [nmol" ~ g^-1 ~ "]"),
+       title = "D") +
+  scale_x_continuous(expand = c(0, 0), limits = c(0, 0.61)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 300)) +
+  scale_color_manual(values = c("red3", "#0072B2", "#F0E442")) +
+  theme_bw() + 
+  theme(axis.text = element_text(size = 10), axis.title = element_text(size = 11), 
+        plot.title = element_text(size = 15), strip.text.y = element_text(size = 10), 
+        strip.text.x = element_text(size = 10))
 
 ggarrange(e, f, g, h, ncol = 2, nrow = 2, common.legend = TRUE, legend = "bottom")
 
-#scatterplot without geom_smooth
-i <- ggplot(maize, aes(x = SPAD, y = Chl_Labor, color = Treatment, shape = Blattalter)) +
-  geom_point() + 
-  ggtitle("SPAD") +
-  theme_bw()
-
-j <- ggplot(maize, aes(x = Chl, y = Chl_Labor, color = Treatment, shape = Blattalter)) +
-  geom_point() + 
-  ggtitle("Dualex") +
-  theme_bw()
-
-k <- ggplot(maize, aes(x = SFR_R, y = Chl_Labor, color = Treatment, shape = Blattalter)) +
-  geom_point() + 
-  ggtitle("Multiplex") +
-  theme_bw()
-
-l <- ggplot(maize, aes(x = ChlNDI, y = Chl_Labor, color = Treatment, shape = Blattalter)) +
-  geom_point() + 
-  ggtitle("Fieldspec") +
-  theme_bw()
-
-ggarrange(i, j, k, l, ncol = 2, nrow = 2, common.legend = TRUE, legend = "bottom")
-
 #morphological plots
+chl <- maize[!duplicated(maize$Blattdichte), ]
+
 height <- maize[!duplicated(maize$Pflanzennummer), ]
 
+tm <- slice(height, 10:30)
+tm <- transform(tm, TM_Ganze_Pflanze = as.numeric(TM_Ganze_Pflanze))
+
+#height
 q <- ggplot(height, aes(x = Treatment, y = Pflanzenhoehe, fill = Treatment)) +
   geom_boxplot(show.legend = FALSE) +
   ggtitle("A") +
   ylab("Plant height [cm]") +
+  scale_fill_manual(values = c("red3", "#0072B2", "#F0E442")) +
   geom_jitter(position = position_jitter(0.2), show.legend = FALSE) +
-  theme_bw() 
-q
-
-
-#leafe density
-dens <- maize[!duplicated(maize$Blattdichte), ]
-
-w <- ggplot(dens, aes(x = Treatment, y = Blattdichte, fill = Blattalter)) +
-  geom_boxplot(show.legend = TRUE) +
-  ggtitle("B") +
-  ylab("Leafe density [g/m^3 ?]") +
-  geom_jitter(position = position_jitter(0.2), show.legend = FALSE) +
-  theme_bw() 
-w
-
-w <- ggplot(dens, aes(x = Treatment, y = Blattdichte, fill = Treatment)) +
-  geom_boxplot(show.legend = FALSE) +
-  ggtitle("B") +
-  ylab("Leafe density [g/m^3 ?]") +
-  geom_jitter(position = position_jitter(0.2), show.legend = FALSE) +
-  theme_bw() 
-w
+  theme_bw() +
+  theme(axis.text = element_text(size = 10), axis.title = element_text(size = 11), 
+        plot.title = element_text(size = 15), strip.text.y = element_text(size = 10), 
+        strip.text.x = element_text(size = 10))
 
 #dry matter
-tm <- slice(height, 10:30)
-tm <- transform(tm, TM_Ganze_Pflanze = as.numeric(TM_Ganze_Pflanze))
-
-e <- ggplot(tm, aes(x = Treatment, y = TM_Ganze_Pflanze, fill = Treatment)) +
+w <- ggplot(tm, aes(x = Treatment, y = TM_Ganze_Pflanze, fill = Treatment)) +
   geom_boxplot(show.legend = FALSE) +
-  ggtitle("C") +
-  ylab("Dry Matter Content") +
+  ggtitle("B") +
+  ylab("Dry matter per plant [g]") +
+  scale_fill_manual(values = c("red3", "#0072B2", "#F0E442")) +
   geom_jitter(position = position_jitter(0.2), show.legend = FALSE) +
-  theme_bw() 
-e
+  theme_bw() +
+  theme(axis.text = element_text(size = 10), axis.title = element_text(size = 11), 
+        plot.title = element_text(size = 15), strip.text.y = element_text(size = 10), 
+        strip.text.x = element_text(size = 10))
 
 #chlorophyll lab
-r <- ggplot(dens, aes(x = Treatment, y = Chl_Labor, fill = Treatment)) +
+r <- ggplot(chl, aes(x = Treatment, y = Chl_Labor, fill = Treatment)) +
   geom_boxplot(show.legend = FALSE) +
   ggtitle("C") +
-  ylab("Chlorophyll Content [??]") +
+  ylab("Chlorophyll content [nmol" ~ g^-1 ~ "]") +
+  scale_fill_manual(values = c("red3", "#0072B2", "#F0E442")) +
   geom_jitter(position = position_jitter(0.2), show.legend = FALSE) +
-  theme_bw() 
-r
-
-ggarrange(q, w, e, r)
-
-#field spec clor a and b + lab clor a and b
-m <- ggplot(maize, aes(x = PSSRa, y = Chl_a_nmol_g_EW, color = Treatment, shape = Blattalter)) +
-  geom_point() + 
-  geom_smooth(method = lm) +
-  ggtitle("Chl a") + 
-  theme_bw()
-
-n <- ggplot(maize, aes(x = PSSRb, y = Chl_b_nmol_g_EW, color = Treatment, shape = Blattalter)) +
-  geom_point() + 
-  geom_smooth(method = lm) +
-  ggtitle("Chl b") + 
-  theme_bw()
-
-ggarrange(m, n, ncol = 2, nrow = 1, common.legend = TRUE, legend = "bottom")
-
-
-o <- ggscatter(maize, x = "PSSRa", y = "Chl_a_nmol_g_EW", 
-               add = "reg.line",                        
-               conf.int = TRUE, cor.method = "spearman", cor.coef = TRUE,                       
-               color = "Treatment", palette = "jco", title = "Chl a",          
-               shape = "Treatment")
-
-
-p <- ggscatter(maize, x = "PSSRb", y = "Chl_b_nmol_g_EW", 
-               add = "reg.line",                        
-               conf.int = TRUE, cor.method = "spearman", cor.coef = TRUE,                       
-               color = "Treatment", palette = "jco", title =  "Chl b",          
-               shape = "Treatment")
-
-ggarrange(o, p, ncol = 2, nrow = 1, common.legend = TRUE, legend = "bottom")
-
-
-
-########
-#stuff we probably wont need anymore
-#1.2 with treatment differentiation
-mangel <- filter(maize, Treatment == "Nährstoffmangel")
-trocken <- filter(maize, Treatment == "Trockenstress")
-kontr <- filter(maize, Treatment == "Kontrolle")
-
-#mangel
-spad.model <- lm(FM_Rest_Ernteblatt ~ SPAD, data = mangel)
-lab.model <- lm(FM_Rest_Ernteblatt ~ Chl_Labor, data = mangel)
-dualex.model <- lm(FM_Rest_Ernteblatt ~ Chl, data = mangel)
-multi.model1 <- lm(FM_Rest_Ernteblatt ~ SFR_R, data = mangel)
-multi.model2 <- lm(FM_Rest_Ernteblatt ~ SFR_G, data = mangel)
-field.model1 <- lm(FM_Rest_Ernteblatt ~ NDWI, data = mangel)
-field.model2 <- lm(FM_Rest_Ernteblatt ~ ChlNDI, data = mangel)
-
-par(mfrow = c(2, 2))
-plot(spad.model)
-plot(lab.model)
-plot(dualex.model)
-plot(multi.model1)
-plot(multi.model2)
-plot(field.model1)
-plot(field.model2)
-par(mfrow = c(1, 1))
-
-shapiro.test(mangel$FM_Rest_Ernteblatt)
-shapiro.test(mangel$Pflanzenhoehe)
-shapiro.test(mangel$SPAD)
-shapiro.test(mangel$Chl_Labor)
-shapiro.test(mangel$Chl)
-shapiro.test(mangel$SFR_R)
-shapiro.test(mangel$SFR_G)
-shapiro.test(mangel$NDWI)
-shapiro.test(mangel$ChlNDI)
-
-#trocken
-spad.model <- lm(FM_Rest_Ernteblatt ~ SPAD, data = trocken)
-lab.model <- lm(FM_Rest_Ernteblatt ~ Chl_Labor, data = trocken)
-dualex.model <- lm(FM_Rest_Ernteblatt ~ Chl, data = trocken)
-multi.model1 <- lm(FM_Rest_Ernteblatt ~ SFR_R, data = trocken)
-multi.model2 <- lm(FM_Rest_Ernteblatt ~ SFR_G, data = trocken)
-field.model1 <- lm(FM_Rest_Ernteblatt ~ NDWI, data = trocken)
-field.model2 <- lm(FM_Rest_Ernteblatt ~ ChlNDI, data = trocken)
-
-par(mfrow = c(2, 2))
-plot(spad.model)
-plot(lab.model)
-plot(dualex.model)
-plot(multi.model1)
-plot(multi.model2)
-plot(field.model1)
-plot(field.model2)
-par(mfrow = c(1, 1))
-
-shapiro.test(trocken$FM_Rest_Ernteblatt)
-shapiro.test(trocken$Pflanzenhoehe)
-shapiro.test(trocken$SPAD)
-shapiro.test(trocken$Chl_Labor)
-shapiro.test(trocken$Chl)
-shapiro.test(trocken$SFR_R)
-shapiro.test(trocken$SFR_G)
-shapiro.test(trocken$NDWI)
-shapiro.test(trocken$ChlNDI)
-
-#kontrolle
-spad.model <- lm(FM_Rest_Ernteblatt ~ SPAD, data = kontr)
-lab.model <- lm(FM_Rest_Ernteblatt ~ Chl_Labor, data = kontr)
-dualex.model <- lm(FM_Rest_Ernteblatt ~ Chl, data = kontr)
-multi.model1 <- lm(FM_Rest_Ernteblatt ~ SFR_R, data = kontr)
-multi.model2 <- lm(FM_Rest_Ernteblatt ~ SFR_G, data = kontr)
-field.model1 <- lm(FM_Rest_Ernteblatt ~ NDWI, data = kontr)
-field.model2 <- lm(FM_Rest_Ernteblatt ~ ChlNDI, data = kontr)
-
-par(mfrow = c(2, 2))
-plot(spad.model)
-plot(lab.model)
-plot(dualex.model)
-plot(multi.model1)
-plot(multi.model2)
-plot(field.model1)
-plot(field.model2)
-par(mfrow = c(1, 1))
-
-shapiro.test(kontr$FM_Rest_Ernteblatt)
-shapiro.test(kontr$Pflanzenhoehe)
-shapiro.test(kontr$SPAD)
-shapiro.test(kontr$Chl_Labor)
-shapiro.test(kontr$Chl)
-shapiro.test(kontr$SFR_R)
-shapiro.test(kontr$SFR_G)
-shapiro.test(kontr$NDWI)
-shapiro.test(kontr$ChlNDI)
-
-#2.2 with treatment differentiation 
-#mangel
-cor.df <- select(mangel, Chl_Labor, SPAD, Chl, SFR_R, ChlNDI)
-
-cormat <- round(cor(cor.df),2)
-
-lt <- get_upper_tri(cormat)
-lt
-
-lt <- melt(lt, na.rm = TRUE)
-
-ggheatmap <- ggplot(lt, aes(Var2, Var1, fill = value))+
-  geom_tile(color = "white")+
-  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
-                       midpoint = 0, limit = c(-1,1), space = "Lab", 
-                       name="Pearson\nCorrelation") +
-  theme_minimal()+ 
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, 
-                                   size = 12, hjust = 1)) +
-  ggtitle("Mangel") +
-  coord_fixed()
-
-ggheatmap + 
-  geom_text(aes(Var2, Var1, label = value), color = "black", size = 4) +
-  theme(
-    axis.title.x = element_blank(),
-    axis.title.y = element_blank(),
-    panel.grid.major = element_blank(),
-    panel.border = element_blank(),
-    panel.background = element_blank(),
-    axis.ticks = element_blank(),
-    legend.justification = c(1, 0),
-    legend.position = c(0.6, 0.7),
-    legend.direction = "horizontal")+
-  guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
-                               title.position = "top", title.hjust = 0.5))
-
-#spad
-a <- ggscatter(mangel, x = "SPAD", y = "Chl_Labor", 
-          add = "reg.line",                        
-          conf.int = TRUE, cor.method = "pearson", cor.coef = TRUE,                       
-          color = "Treatment", palette = "jco", title = "SPAD",          
-          shape = "Treatment")
-
-#dualex
-b <- ggscatter(mangel, x = "Chl", y = "Chl_Labor", 
-          add = "reg.line",                        
-          conf.int = TRUE, cor.method = "pearson", cor.coef = TRUE,                       
-          color = "Treatment", palette = "jco", title =  "Dualex",          
-          shape = "Treatment")
-
-#multiplex
-c <- ggscatter(mangel, x = "SFR_R", y = "Chl_Labor", 
-          add = "reg.line",                        
-          conf.int = TRUE, cor.method = "pearson", cor.coef = TRUE,                       
-          color = "Treatment", palette = "jco", title = "Multiplex",          
-          shape = "Treatment")
-
-#fieldspec
-d <- ggscatter(mangel, x = "ChlNDI", y = "Chl_Labor", 
-          add = "reg.line",                        
-          conf.int = TRUE, cor.method = "pearson", cor.coef = TRUE,                       
-          color = "Treatment", palette = "jco", title = "Fieldspec",            
-          shape = "Treatment")
-
-ggarrange(a, b, c, d)
-
-#trocken
-cor.df <- select(trocken, Chl_Labor, SPAD, Chl, SFR_R, ChlNDI)
-
-cormat <- round(cor(cor.df),2)
-
-lt <- get_upper_tri(cormat)
-lt
-
-lt <- melt(lt, na.rm = TRUE)
-
-ggheatmap <- ggplot(lt, aes(Var2, Var1, fill = value))+
-  geom_tile(color = "white")+
-  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
-                       midpoint = 0, limit = c(-1,1), space = "Lab", 
-                       name="Pearson\nCorrelation") +
-  theme_minimal()+ 
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, 
-                                   size = 12, hjust = 1)) +
-  ggtitle("Trockenstress") +
-  coord_fixed()
-
-ggheatmap + 
-  geom_text(aes(Var2, Var1, label = value), color = "black", size = 4) +
-  theme(
-    axis.title.x = element_blank(),
-    axis.title.y = element_blank(),
-    panel.grid.major = element_blank(),
-    panel.border = element_blank(),
-    panel.background = element_blank(),
-    axis.ticks = element_blank(),
-    legend.justification = c(1, 0),
-    legend.position = c(0.6, 0.7),
-    legend.direction = "horizontal")+
-  guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
-                               title.position = "top", title.hjust = 0.5))
-
-#spad
-a <- ggscatter(trocken, x = "SPAD", y = "Chl_Labor", 
-               add = "reg.line",                        
-               conf.int = TRUE, cor.method = "pearson", cor.coef = TRUE,                       
-               color = "Treatment", palette = "jco", title = "SPAD",          
-               shape = "Treatment")
-
-#dualex
-b <- ggscatter(trocken, x = "Chl", y = "Chl_Labor", 
-               add = "reg.line",                        
-               conf.int = TRUE, cor.method = "pearson", cor.coef = TRUE,                       
-               color = "Treatment", palette = "jco", title =  "Dualex",          
-               shape = "Treatment")
-
-#multiplex
-c <- ggscatter(trocken, x = "SFR_R", y = "Chl_Labor", 
-               add = "reg.line",                        
-               conf.int = TRUE, cor.method = "pearson", cor.coef = TRUE,                       
-               color = "Treatment", palette = "jco", title = "Multiplex",          
-               shape = "Treatment")
-
-#fieldspec
-d <- ggscatter(trocken, x = "ChlNDI", y = "Chl_Labor", 
-               add = "reg.line",                        
-               conf.int = TRUE, cor.method = "pearson", cor.coef = TRUE,                       
-               color = "Treatment", palette = "jco", title = "Fieldspec",            
-               shape = "Treatment")
-
-ggarrange(a, b, c, d)
-
-#kontrolle
-cor.df <- select(kontr, Chl_Labor, SPAD, Chl, SFR_R, ChlNDI)
-
-cormat <- round(cor(cor.df),2)
-
-lt <- get_upper_tri(cormat)
-lt
-
-lt <- melt(lt, na.rm = TRUE)
-
-ggheatmap <- ggplot(lt, aes(Var2, Var1, fill = value))+
-  geom_tile(color = "white")+
-  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
-                       midpoint = 0, limit = c(-1,1), space = "Lab", 
-                       name="Pearson\nCorrelation") +
-  theme_minimal()+ 
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, 
-                                   size = 12, hjust = 1)) +
-  ggtitle("Kontrolle") +
-  coord_fixed()
-
-ggheatmap + 
-  geom_text(aes(Var2, Var1, label = value), color = "black", size = 4) +
-  theme(
-    axis.title.x = element_blank(),
-    axis.title.y = element_blank(),
-    panel.grid.major = element_blank(),
-    panel.border = element_blank(),
-    panel.background = element_blank(),
-    axis.ticks = element_blank(),
-    legend.justification = c(1, 0),
-    legend.position = c(0.6, 0.7),
-    legend.direction = "horizontal")+
-  guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
-                               title.position = "top", title.hjust = 0.5))
-
-#spad
-a <- ggscatter(kontr, x = "SPAD", y = "Chl_Labor", 
-               add = "reg.line",                        
-               conf.int = TRUE, cor.method = "pearson", cor.coef = TRUE,                       
-               color = "Treatment", palette = "jco", title = "SPAD",          
-               shape = "Treatment")
-
-#dualex
-b <- ggscatter(kontr, x = "Chl", y = "Chl_Labor", 
-               add = "reg.line",                        
-               conf.int = TRUE, cor.method = "pearson", cor.coef = TRUE,                       
-               color = "Treatment", palette = "jco", title =  "Dualex",          
-               shape = "Treatment")
-
-#multiplex
-c <- ggscatter(kontr, x = "SFR_R", y = "Chl_Labor", 
-               add = "reg.line",                        
-               conf.int = TRUE, cor.method = "pearson", cor.coef = TRUE,                       
-               color = "Treatment", palette = "jco", title = "Multiplex",          
-               shape = "Treatment")
-
-#fieldspec
-d <- ggscatter(kontr, x = "ChlNDI", y = "Chl_Labor", 
-               add = "reg.line",                        
-               conf.int = TRUE, cor.method = "pearson", cor.coef = TRUE,                       
-               color = "Treatment", palette = "jco", title = "Fieldspec",            
-               shape = "Treatment")
-
-ggarrange(a, b, c, d)
-
-
-
-
-
-
-
-
-
-
+  theme_bw() +
+  theme(axis.text = element_text(size = 10), axis.title = element_text(size = 11), 
+        plot.title = element_text(size = 15), strip.text.y = element_text(size = 10), 
+        strip.text.x = element_text(size = 10))
+
+ggarrange(q, w, r, ncol = 3, nrow = 1)
 
